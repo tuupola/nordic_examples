@@ -14,3 +14,17 @@ Flash with `nrfutil`. You do not need to be in SDK shell for this.
 $ SERIAL_NUMBER=$(nrfutil device list | grep THINGY)
 $ nrfutil device program --firmware build/dfu_application.zip --serial-number $SERIAL_NUMBER
 ```
+
+## Connect 
+
+```
+$ picocom -b 115200 /dev/ttyACM0
+Terminal ready
+*** Booting nRF Connect SDK v3.2.1-d8887f6f32df ***
+*** Using Zephyr OS v4.2.99-ec78104f1569 ***
+[00:00:00.291,778] <inf> hello_world: Hello world!
+[00:00:01.291,839] <inf> hello_world: Hello world!
+[00:00:02.291,992] <inf> hello_world: Hello world!
+...
+ctrl-a ctrl-x
+```
