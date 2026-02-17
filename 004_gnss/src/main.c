@@ -65,6 +65,13 @@ int main(void)
         return rc;
     }
 
+    /* Continous 1Hz navigation mode */
+    rc = nrf_modem_gnss_fix_interval_set(1);
+    if (rc < 0) {
+        LOG_ERR("Failed to set fix interval: %d", rc);
+        return rc;
+    }
+
     rc = nrf_modem_gnss_start();
     if (rc < 0) {
         LOG_ERR("Failed to start GNSS: %d", rc);
