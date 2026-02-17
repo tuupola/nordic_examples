@@ -6,6 +6,42 @@
 
 LOG_MODULE_REGISTER(gnss, LOG_LEVEL_INF);
 
+static void gnss_event_handler(int event)
+{
+    switch (event) {
+    case NRF_MODEM_GNSS_EVT_PVT:
+        LOG_INF("NRF_MODEM_GNSS_EVT_PVT");
+        break;
+    case NRF_MODEM_GNSS_EVT_FIX:
+        LOG_INF("NRF_MODEM_GNSS_EVT_FIX");
+        break;
+    case NRF_MODEM_GNSS_EVT_NMEA:
+        LOG_INF("NRF_MODEM_GNSS_EVT_NMEA");
+        break;
+    case NRF_MODEM_GNSS_EVT_AGNSS_REQ:
+        LOG_INF("NRF_MODEM_GNSS_EVT_AGNSS_REQ");
+        break;
+    case NRF_MODEM_GNSS_EVT_BLOCKED:
+        LOG_INF("NRF_MODEM_GNSS_EVT_BLOCKED");
+        break;
+    case NRF_MODEM_GNSS_EVT_UNBLOCKED:
+        LOG_INF("NRF_MODEM_GNSS_EVT_UNBLOCKED");
+        break;
+    case NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP:
+        LOG_INF("NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP");
+        break;
+    case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
+        LOG_INF("NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT");
+        break;
+    case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX:
+        LOG_INF("NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX");
+        break;
+    default:
+        LOG_WRN("Unknown GNSS event: %d", event);
+        break;
+    }
+}
+
 int main(void)
 {
     int rc;
@@ -20,6 +56,12 @@ int main(void)
     rc = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_ACTIVATE_GNSS);
     if (rc < 0) {
         LOG_ERR("Failed to activate GNSS: %d", rc);
+        return rc;
+    }
+
+    rc = nrf_modem_gnss_event_handler_set(gnss_event_handler);
+    if (rc < 0) {
+        LOG_ERR("Failed to set GNSS event handler: %d", rc);
         return rc;
     }
 
