@@ -6,6 +6,8 @@
 
 LOG_MODULE_REGISTER(gnss, LOG_LEVEL_INF);
 
+static struct nrf_modem_gnss_pvt_data_frame pvt_data;
+
 static void gnss_event_handler(int event)
 {
     switch (event) {
@@ -80,6 +82,12 @@ int main(void)
     LOG_INF("GNSS started.");
 
     while (1) {
+        rc = nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT);
+        if (rc < 0) {
+            LOG_ERR("Failed to read GNSS: %d", rc);
+        } else {
+            LOG_INF("lat=%.06f lon=%.06f", pvt_data.latitude, pvt_data.longitude);
+        }
         k_sleep(K_SECONDS(1));
     }
     return 0;
