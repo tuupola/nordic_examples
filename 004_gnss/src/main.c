@@ -82,11 +82,28 @@ int main(void)
     LOG_INF("GNSS started.");
 
     while (1) {
+        int tracked = 0;
+        int used = 0;
+
         rc = nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT);
-        if (rc < 0) {
-            LOG_ERR("Failed to read GNSS: %d", rc);
+
+        if (rc == 0 && (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID)) {
+            LOG_INF("lat=%.06f lon=%.06f",
+                pvt_data.latitude, pvt_data.longitude);
         } else {
-            LOG_INF("lat=%.06f lon=%.06f", pvt_data.latitude, pvt_data.longitude);
+            for (int i = 0; i < NRF_MODEM_GNSS_MAX_SATELLITES; i++) {
+                /* No data in this slot */
+                if (pvt_data.sv[i].sv == 0) {
+                    break;
+                }
+                /* We have a satellite */
+                tracked++;
+                if (pvt_data.sv[i].flags & NRF_MODEM_GNSS_SV_FLAG_USED_IN_FIX) {
+                    /* This satellite is used in fix */
+                    used++;
+                }
+            }
+            LOG_INF("Satellites tracked: %d, used: %d", tracked, used);
         }
         k_sleep(K_SECONDS(1));
     }
