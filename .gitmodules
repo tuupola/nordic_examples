@@ -1,0 +1,3 @@
+[submodule "006_gnss_nrid/external/librid"]
+	path = 006_gnss_nrid/external/librid
+	url = https://github.com/tuupola/librid.git
