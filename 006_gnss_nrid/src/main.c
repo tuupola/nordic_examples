@@ -3,11 +3,12 @@
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
 #include <nrf_modem_gnss.h>
-#include <rid/version.h>
+#include <rid/rid.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static struct nrf_modem_gnss_pvt_data_frame pvt_data;
+static rid_location_t location;
 
 static void gnss_event_handler(int event)
 {
@@ -93,6 +94,31 @@ int main(void)
         if (rc == 0 && (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID)) {
             LOG_INF("  lat=%.06f lon=%.06f",
                 pvt_data.latitude, pvt_data.longitude
+            );
+
+            /* Create a location Remote ID message. */
+            rid_location_init(&location);
+            rid_location_set_operational_status(
+                &location, RID_OPERATIONAL_STATUS_AIRBORNE
+            );
+            rid_location_set_height_type(
+                &location, RID_HEIGHT_TYPE_AGL
+            );
+            rid_location_set_latitude(&location, pvt_data.latitude);
+            rid_location_set_longitude(&location, pvt_data.longitude);
+            rid_location_set_geodetic_altitude(
+                &location, pvt_data.altitude
+            );
+            rid_location_set_speed(&location, pvt_data.speed);
+            rid_location_set_vertical_speed(
+                &location, pvt_data.vertical_speed
+            );
+            rid_location_set_track_direction(
+                &location, (uint16_t)pvt_data.heading
+            );
+
+            LOG_HEXDUMP_INF(
+                &location, sizeof(location), "Location"
             );
         }
 
