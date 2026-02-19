@@ -6,7 +6,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(lte_time, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static K_SEM_DEFINE(lte_connected_sem, 0, 1);
 static volatile bool lte_connected;
@@ -58,6 +58,7 @@ static int lte_connect(void) {
 
 int main(void) {
     int rc;
+    int count = 0;
     int64_t ts;
     time_t time_sec;
     struct tm *tm;
@@ -97,6 +98,12 @@ int main(void) {
         } else {
             LOG_WRN("Time not available: %d", rc);
         }
+        count++;
+        if (count == 30) {
+            LOG_INF("Forcing LTE disconnect for testing.");
+            lte_lc_func_mode_set(LTE_LC_FUNC_MODE_OFFLINE);
+        }
+
         k_sleep(K_SECONDS(1));
     }
     return 0;
