@@ -3,6 +3,7 @@
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
 #include <nrf_modem_gnss.h>
+#include <rid/version.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
@@ -47,6 +48,8 @@ static void gnss_event_handler(int event)
 int main(void)
 {
     int rc;
+
+    LOG_INF("librid %s", rid_version_to_string());
 
     LOG_INF("Initializing the modem firmware.");
     rc = nrf_modem_lib_init();
