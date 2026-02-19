@@ -9,5 +9,5 @@ int main(void) {
         /* k_ prefix denotes kernel */
         k_sleep(K_MSEC(1000));
     }
-	return 0;
+    return 0;
 }

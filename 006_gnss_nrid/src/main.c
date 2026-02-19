@@ -1,53 +1,51 @@
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
 #include <nrf_modem_gnss.h>
 #include <rid/rid.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static struct nrf_modem_gnss_pvt_data_frame pvt_data;
 static rid_location_t location;
 
-static void gnss_event_handler(int event)
-{
+static void gnss_event_handler(int event) {
     switch (event) {
-    case NRF_MODEM_GNSS_EVT_PVT:
-        LOG_INF("NRF_MODEM_GNSS_EVT_PVT");
-        break;
-    case NRF_MODEM_GNSS_EVT_FIX:
-        LOG_INF("NRF_MODEM_GNSS_EVT_FIX");
-        break;
-    case NRF_MODEM_GNSS_EVT_NMEA:
-        LOG_INF("NRF_MODEM_GNSS_EVT_NMEA");
-        break;
-    case NRF_MODEM_GNSS_EVT_AGNSS_REQ:
-        LOG_INF("NRF_MODEM_GNSS_EVT_AGNSS_REQ");
-        break;
-    case NRF_MODEM_GNSS_EVT_BLOCKED:
-        LOG_INF("NRF_MODEM_GNSS_EVT_BLOCKED");
-        break;
-    case NRF_MODEM_GNSS_EVT_UNBLOCKED:
-        LOG_INF("NRF_MODEM_GNSS_EVT_UNBLOCKED");
-        break;
-    case NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP:
-        LOG_INF("NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP");
-        break;
-    case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
-        LOG_INF("NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT");
-        break;
-    case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX:
-        LOG_INF("NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX");
-        break;
-    default:
-        LOG_WRN("Unknown GNSS event: %d", event);
-        break;
+        case NRF_MODEM_GNSS_EVT_PVT:
+            LOG_INF("NRF_MODEM_GNSS_EVT_PVT");
+            break;
+        case NRF_MODEM_GNSS_EVT_FIX:
+            LOG_INF("NRF_MODEM_GNSS_EVT_FIX");
+            break;
+        case NRF_MODEM_GNSS_EVT_NMEA:
+            LOG_INF("NRF_MODEM_GNSS_EVT_NMEA");
+            break;
+        case NRF_MODEM_GNSS_EVT_AGNSS_REQ:
+            LOG_INF("NRF_MODEM_GNSS_EVT_AGNSS_REQ");
+            break;
+        case NRF_MODEM_GNSS_EVT_BLOCKED:
+            LOG_INF("NRF_MODEM_GNSS_EVT_BLOCKED");
+            break;
+        case NRF_MODEM_GNSS_EVT_UNBLOCKED:
+            LOG_INF("NRF_MODEM_GNSS_EVT_UNBLOCKED");
+            break;
+        case NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP:
+            LOG_INF("NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP");
+            break;
+        case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
+            LOG_INF("NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT");
+            break;
+        case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX:
+            LOG_INF("NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX");
+            break;
+        default:
+            LOG_WRN("Unknown GNSS event: %d", event);
+            break;
     }
 }
 
-int main(void)
-{
+int main(void) {
     int rc;
 
     LOG_INF("librid %s", rid_version_to_string());
@@ -92,9 +90,7 @@ int main(void)
         rc = nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT);
 
         if (rc == 0 && (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID)) {
-            LOG_INF("  lat=%.06f lon=%.06f",
-                pvt_data.latitude, pvt_data.longitude
-            );
+            LOG_INF("  lat=%.06f lon=%.06f", pvt_data.latitude, pvt_data.longitude);
 
             /* Create a location Remote ID message. */
             rid_location_init(&location);

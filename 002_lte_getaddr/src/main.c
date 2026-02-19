@@ -1,13 +1,12 @@
+#include <modem/lte_lc.h>
+#include <modem/nrf_modem_lib.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/net/socket.h>
-#include <modem/lte_lc.h>
-#include <modem/nrf_modem_lib.h>
 
 LOG_MODULE_REGISTER(lte_getaddr, LOG_LEVEL_INF);
 
-int main(void)
-{
+int main(void) {
     int rc;
     struct zsock_addrinfo *result;
     struct zsock_addrinfo hints = {

@@ -1,15 +1,14 @@
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
+#include <date_time.h>
+#include <errno.h>
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
-#include <date_time.h>
 #include <time.h>
-#include <errno.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(lte_time, LOG_LEVEL_INF);
 
-int main(void)
-{
+int main(void) {
     int rc;
     int64_t ts;
     time_t time_sec;
@@ -37,9 +36,7 @@ int main(void)
         if (rc == 0) {
             time_sec = ts / 1000;
             tm = gmtime(&time_sec);
-            LOG_INF("UTC: %04d-%02d-%02d %02d:%02d:%02d",
-                tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-                tm->tm_hour, tm->tm_min, tm->tm_sec);
+            LOG_INF("UTC: %04d-%02d-%02d %02d:%02d:%02d", tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
         } else {
             LOG_WRN("Time not available: %d", rc);
         }

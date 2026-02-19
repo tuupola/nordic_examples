@@ -1,8 +1,8 @@
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
 #include <net/mqtt_helper.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
@@ -13,8 +13,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static K_SEM_DEFINE(mqtt_connected_sem, 0, 1);
 
-static void on_connack(enum mqtt_conn_return_code return_code, bool session_present)
-{
+static void on_connack(enum mqtt_conn_return_code return_code, bool session_present) {
     if (return_code != MQTT_CONNECTION_ACCEPTED) {
         LOG_ERR("MQTT connection rejected: %d", return_code);
         return;
@@ -24,21 +23,15 @@ static void on_connack(enum mqtt_conn_return_code return_code, bool session_pres
     k_sem_give(&mqtt_connected_sem);
 }
 
-static void on_disconnect(int result)
-{
+static void on_disconnect(int result) {
     LOG_INF("MQTT disconnected: %d", result);
 }
 
-static void on_publish(struct mqtt_helper_buf topic, struct mqtt_helper_buf payload)
-{
-    LOG_INF("Received: %.*s on topic: %.*s",
-        payload.size, payload.ptr,
-        topic.size, topic.ptr
-    );
+static void on_publish(struct mqtt_helper_buf topic, struct mqtt_helper_buf payload) {
+    LOG_INF("Received: %.*s on topic: %.*s", payload.size, payload.ptr, topic.size, topic.ptr);
 }
 
-static void on_suback(uint16_t message_id, int result)
-{
+static void on_suback(uint16_t message_id, int result) {
     if (result == 0) {
         LOG_INF("Subscribed (msg id %d)", message_id);
     } else {
@@ -46,8 +39,7 @@ static void on_suback(uint16_t message_id, int result)
     }
 }
 
-int main(void)
-{
+int main(void) {
     int rc;
 
     LOG_INF("Initializing the modem firmware.");

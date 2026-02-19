@@ -1,12 +1,11 @@
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(lte_template, LOG_LEVEL_INF);
 
-int main(void)
-{
+int main(void) {
     int rc;
     LOG_INF("Initializing the modem firmware.");
     rc = nrf_modem_lib_init();
