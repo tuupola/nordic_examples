@@ -1,7 +1,6 @@
 #include <modem/lte_lc.h>
 #include <modem/nrf_modem_lib.h>
 #include <nrf_modem_gnss.h>
-#include <rid/rid.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
@@ -10,9 +9,6 @@
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static struct nrf_modem_gnss_pvt_data_frame pvt_data;
-static rid_location_t location;
-static rid_system_t system;
-static rid_basic_id_t basic_id;
 
 static void gnss_event_handler(int event) {
     switch (event) {
@@ -96,9 +92,9 @@ int main(void) {
         if (rc == 0 && (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID)) {
             LOG_INF("  lat=%.06f lon=%.06f", pvt_data.latitude, pvt_data.longitude);
 
-            uav_basic_id_update(&basic_id);
-            uav_system_update(&system, &pvt_data);
-            uav_location_update(&location, &pvt_data);
+            uav_basic_id_get();
+            uav_system_update(&pvt_data);
+            uav_location_update(&pvt_data);
         }
 
         for (int i = 0; i < NRF_MODEM_GNSS_MAX_SATELLITES; i++) {
