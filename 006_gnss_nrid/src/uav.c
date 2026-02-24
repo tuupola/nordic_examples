@@ -5,6 +5,17 @@
 
 LOG_MODULE_REGISTER(uav, LOG_LEVEL_INF);
 
+int uav_basic_id_update(rid_basic_id_t *message) {
+    rid_basic_id_init(message);
+    rid_basic_id_set_type(message, RID_ID_TYPE_SERIAL_NUMBER);
+    rid_basic_id_set_ua_type(message, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
+    rid_basic_id_set_uas_id(message, "1ABCD2345EF678XYZ");
+
+    LOG_HEXDUMP_INF(message, sizeof(*message), "Basic ID");
+
+    return 0;
+}
+
 int uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pvt_data_frame *pvt) {
     /* Create a location Remote ID message. */
     rid_location_init(location);
