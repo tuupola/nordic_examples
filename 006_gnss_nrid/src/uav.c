@@ -5,18 +5,16 @@
 
 LOG_MODULE_REGISTER(uav, LOG_LEVEL_INF);
 
-int uav_basic_id_update(rid_basic_id_t *message) {
+void uav_basic_id_update(rid_basic_id_t *message) {
     rid_basic_id_init(message);
     rid_basic_id_set_type(message, RID_ID_TYPE_SERIAL_NUMBER);
     rid_basic_id_set_ua_type(message, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
     rid_basic_id_set_uas_id(message, "1ABCD2345EF678XYZ");
 
     LOG_HEXDUMP_INF(message, sizeof(*message), "Basic ID");
-
-    return 0;
 }
 
-int uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pvt_data_frame *pvt) {
+void uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pvt_data_frame *pvt) {
     /* Create a location Remote ID message. */
     rid_location_init(location);
     rid_location_set_operational_status(location, RID_OPERATIONAL_STATUS_AIRBORNE);
@@ -29,11 +27,9 @@ int uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pv
     rid_location_set_track_direction(location, (uint16_t)pvt->heading);
 
     LOG_HEXDUMP_INF(location, sizeof(*location), "Location");
-
-    return 0;
 }
 
-int uav_system_update(rid_system_t *system, const struct nrf_modem_gnss_pvt_data_frame *pvt) {
+void uav_system_update(rid_system_t *system, const struct nrf_modem_gnss_pvt_data_frame *pvt) {
     struct tm tm = {
         .tm_year = pvt->datetime.year - 1900,
         .tm_mon = pvt->datetime.month - 1,
@@ -60,6 +56,4 @@ int uav_system_update(rid_system_t *system, const struct nrf_modem_gnss_pvt_data
     rid_system_set_unixtime(system, (uint32_t)unixtime);
 
     LOG_HEXDUMP_INF(system, sizeof(*system), "System");
-
-    return 0;
 }
