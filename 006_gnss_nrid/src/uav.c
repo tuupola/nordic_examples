@@ -61,3 +61,19 @@ void uav_system_update(const struct nrf_modem_gnss_pvt_data_frame *pvt) {
 
     LOG_HEXDUMP_INF(&system, sizeof(system), "System");
 }
+
+void uav_message_pack_get(rid_message_pack_t *pack) {
+    rid_message_pack_init(pack);
+
+    /* Basic ID does not change. */
+    rid_basic_id_init(&basic_id);
+    rid_basic_id_set_type(&basic_id, RID_ID_TYPE_SERIAL_NUMBER);
+    rid_basic_id_set_ua_type(&basic_id, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
+    rid_basic_id_set_uas_id(&basic_id, "1ABCD2345EF678XYZ");
+
+    LOG_HEXDUMP_INF(&basic_id, sizeof(basic_id), "Basic ID");
+
+    rid_message_pack_add_message(pack, &basic_id);
+    rid_message_pack_add_message(pack, &location);
+    rid_message_pack_add_message(pack, &system);
+}

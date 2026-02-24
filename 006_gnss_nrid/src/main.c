@@ -86,15 +86,18 @@ int main(void) {
     while (1) {
         int tracked = 0;
         int used = 0;
+        rid_message_pack_t pack;
 
         rc = nrf_modem_gnss_read(&pvt_data, sizeof(pvt_data), NRF_MODEM_GNSS_DATA_PVT);
 
         if (rc == 0 && (pvt_data.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID)) {
             LOG_INF("  lat=%.06f lon=%.06f", pvt_data.latitude, pvt_data.longitude);
 
-            uav_basic_id_get();
             uav_system_update(&pvt_data);
             uav_location_update(&pvt_data);
+            uav_message_pack_get(&pack);
+            LOG_HEXDUMP_INF(&pack, sizeof(pack), "Message Pack");
+
         }
 
         for (int i = 0; i < NRF_MODEM_GNSS_MAX_SATELLITES; i++) {
