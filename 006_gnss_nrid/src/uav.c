@@ -1,4 +1,5 @@
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/timeutil.h>
 
 #include "uav.h"
 
@@ -17,6 +18,37 @@ int uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pv
     rid_location_set_track_direction(location, (uint16_t)pvt->heading);
 
     LOG_HEXDUMP_INF(location, sizeof(*location), "Location");
+
+    return 0;
+}
+
+int uav_system_update(rid_system_t *system, const struct nrf_modem_gnss_pvt_data_frame *pvt) {
+    struct tm tm = {
+        .tm_year = pvt->datetime.year - 1900,
+        .tm_mon = pvt->datetime.month - 1,
+        .tm_mday = pvt->datetime.day,
+        .tm_hour = pvt->datetime.hour,
+        .tm_min = pvt->datetime.minute,
+        .tm_sec = pvt->datetime.seconds,
+    };
+
+    rid_system_init(system);
+    rid_system_set_operator_location_type(
+        system, RID_OPERATOR_LOCATION_TYPE_TAKEOFF
+    );
+    rid_system_set_classification_type(
+        system, RID_CLASSIFICATION_TYPE_UNDECLARED
+    );
+    rid_system_set_operator_latitude(system, pvt->latitude);
+    rid_system_set_operator_longitude(system, pvt->longitude);
+    rid_system_set_area_count(system, 1);
+    rid_system_set_area_radius(system, 0);
+    rid_system_set_area_ceiling(system, pvt->altitude + 50.0f);
+    rid_system_set_area_floor(system, 0.0f);
+    int64_t unixtime = timeutil_timegm(&tm);
+    rid_system_set_unixtime(system, (uint32_t)unixtime);
+
+    LOG_HEXDUMP_INF(system, sizeof(*system), "System");
 
     return 0;
 }

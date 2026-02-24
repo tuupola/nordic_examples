@@ -5,5 +5,6 @@
 #include <rid/rid.h>
 
 int uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pvt_data_frame *pvt);
+int uav_system_update(rid_system_t *system, const struct nrf_modem_gnss_pvt_data_frame *pvt);
 
 #endif /* UAV_H */

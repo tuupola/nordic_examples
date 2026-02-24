@@ -11,6 +11,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static struct nrf_modem_gnss_pvt_data_frame pvt_data;
 static rid_location_t location;
+static rid_system_t system;
 
 static void gnss_event_handler(int event) {
     switch (event) {
@@ -95,6 +96,7 @@ int main(void) {
             LOG_INF("  lat=%.06f lon=%.06f", pvt_data.latitude, pvt_data.longitude);
 
             uav_location_update(&location, &pvt_data);
+            uav_system_update(&system, &pvt_data);
         }
 
         for (int i = 0; i < NRF_MODEM_GNSS_MAX_SATELLITES; i++) {
