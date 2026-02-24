@@ -7,6 +7,7 @@ zephyr_include_directories(external/librid/include)
 
 zephyr_library_sources(
     src/main.c
+    src/uav.c
     external/librid/src/basic_id.c
     external/librid/src/location.c
     external/librid/src/message.c

@@ -1,0 +1,9 @@
+#ifndef UAV_H
+#define UAV_H
+
+#include <nrf_modem_gnss.h>
+#include <rid/rid.h>
+
+int uav_location_update(rid_location_t *location, const struct nrf_modem_gnss_pvt_data_frame *pvt);
+
+#endif /* UAV_H */
