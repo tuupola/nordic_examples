@@ -28,11 +28,12 @@ static mavlink_status_t mavlink_status;
 static void process_mavlink(const uint8_t *data, size_t len) {
     for (size_t i = 0; i < len; i++) {
         if (mavlink_parse_char(MAVLINK_COMM_0, data[i], &mavlink_message, &mavlink_status)) {
-            const mavlink_message_info_t *info =
-                mavlink_get_message_info(&mavlink_message);
+            const mavlink_message_info_t *info = mavlink_get_message_info(&mavlink_message);
             if (info) {
-                LOG_INF("%s id=%d from sys=%d comp=%d",
-                    info->name, mavlink_message.msgid,
+                LOG_INF(
+                    "%s id=%d from sys=%d comp=%d",
+                    info->name,
+                    mavlink_message.msgid,
                     mavlink_message.sysid,
                     mavlink_message.compid
                 );
