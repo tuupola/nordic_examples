@@ -49,3 +49,30 @@ Firmware version 2
 ...
 ctrl-a ctrl-x
 ```
+
+Also if you check a NuttX shell in a connected PX4 flight controller you should see this 
+device.
+
+```
+nsh> mavlink status
+...
+instance #1:
+    mavlink chan: #1
+    type:        GENERIC LINK OR RADIO
+    flow control: OFF
+    rates:
+      tx: 18040.9 B/s
+      txerr: 0.0 B/s
+      tx rate mult: 0.814
+      tx rate max: 23040 B/s
+      rx: 21.0 B/s
+      rx loss: 4.2%
+    Received Messages:
+      sysid:  1, compid:191, Total: 29 (lost: 121)
+    FTP enabled: YES, TX enabled: YES
+    mode: Onboard
+    Forwarding: Off
+    MAVLink version: 2
+    transport protocol: serial (/dev/ttyS3 @460800)
+...
+```
