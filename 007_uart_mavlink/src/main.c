@@ -9,6 +9,9 @@
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
+#define EXAMPLE_SYS_ID 1
+#define EXAMPLE_COMP_ID MAV_COMP_ID_ONBOARD_COMPUTER /* 191 */
+
 #define RX_BUF_SIZE 256
 #define RX_TIMEOUT_US 100000 /* 100 ms idle timeout */
 
@@ -16,6 +19,8 @@ static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static uint8_t buf_idx;
+
+static uint8_t tx_buf[MAVLINK_MAX_PACKET_LEN];
 
 static mavlink_message_t mavlink_message;
 static mavlink_status_t mavlink_status;
@@ -56,9 +61,36 @@ static void uart_callback(const struct device *dev, struct uart_event *event, vo
             buf_idx = 0;
             break;
 
+        case UART_TX_DONE:
+            break;
+
+        case UART_TX_ABORTED:
+            LOG_WRN("TX aborted");
+            break;
+
         default:
             break;
     }
+}
+
+static int send_heartbeat(void) {
+    mavlink_message_t msg;
+    uint16_t len;
+
+    mavlink_msg_heartbeat_pack(
+        EXAMPLE_SYS_ID,
+        EXAMPLE_COMP_ID,
+        &msg,
+        MAV_TYPE_ONBOARD_CONTROLLER,
+        MAV_AUTOPILOT_INVALID,
+        0, /* base_mode */
+        0, /* custom_mode */
+        MAV_STATE_ACTIVE
+    );
+
+    len = mavlink_msg_to_send_buffer(tx_buf, &msg);
+    LOG_INF("HEARTBEAT bytes=%u sys=%d comp=%d", len, EXAMPLE_SYS_ID, EXAMPLE_COMP_ID);
+    return uart_tx(uart_dev, tx_buf, len, SYS_FOREVER_US);
 }
 
 int main(void) {
@@ -82,10 +114,14 @@ int main(void) {
         return rc;
     }
 
-    LOG_INF("Listening on UART1 (P0.18 RX / P0.19 TX) at 460800 baud");
+    LOG_INF("UART1 RX=P0.18 RX, TX=P0.19 at 460800 baud, heartbeat 1 Hz");
 
     while (1) {
-        k_sleep(K_FOREVER);
+        rc = send_heartbeat();
+        if (rc < 0) {
+            LOG_WRN("Heartbeat TX failed: %d", rc);
+        }
+        k_sleep(K_SECONDS(1));
     }
     return 0;
 }
