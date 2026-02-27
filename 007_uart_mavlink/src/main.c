@@ -26,7 +26,7 @@ static void process_mavlink(const uint8_t *data, size_t len) {
             const mavlink_message_info_t *info =
                 mavlink_get_message_info(&mavlink_msg);
             if (info) {
-                LOG_INF("%s (ID %d) from sys=%d comp=%d",
+                LOG_INF("%s id=%d from sys=%d comp=%d",
                     info->name, mavlink_msg.msgid, mavlink_msg.sysid, mavlink_msg.compid
                 );
             } else {
