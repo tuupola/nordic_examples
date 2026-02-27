@@ -17,20 +17,22 @@ static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static uint8_t buf_idx;
 
-static mavlink_message_t mavlink_msg;
+static mavlink_message_t mavlink_message;
 static mavlink_status_t mavlink_status;
 
 static void process_mavlink(const uint8_t *data, size_t len) {
     for (size_t i = 0; i < len; i++) {
-        if (mavlink_parse_char(MAVLINK_COMM_0, data[i], &mavlink_msg, &mavlink_status)) {
+        if (mavlink_parse_char(MAVLINK_COMM_0, data[i], &mavlink_message, &mavlink_status)) {
             const mavlink_message_info_t *info =
-                mavlink_get_message_info(&mavlink_msg);
+                mavlink_get_message_info(&mavlink_message);
             if (info) {
                 LOG_INF("%s id=%d from sys=%d comp=%d",
-                    info->name, mavlink_msg.msgid, mavlink_msg.sysid, mavlink_msg.compid
+                    info->name, mavlink_message.msgid,
+                    mavlink_message.sysid,
+                    mavlink_message.compid
                 );
             } else {
-                LOG_WRN("Unknown message ID %d", mavlink_msg.msgid);
+                LOG_WRN("Unknown message ID %d", mavlink_message.msgid);
             }
         }
     }
