@@ -1,3 +1,6 @@
 [submodule "006_gnss_nrid/external/librid"]
 	path = 006_gnss_nrid/external/librid
 	url = https://github.com/tuupola/librid.git
+[submodule "007_uart_mavlink/external/mavlink"]
+	path = 007_uart_mavlink/external/mavlink
+	url = https://github.com/mavlink/c_library_v2.git
