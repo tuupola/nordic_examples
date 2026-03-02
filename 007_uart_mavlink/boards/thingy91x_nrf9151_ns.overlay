@@ -6,6 +6,11 @@
  * reception.
  */
 
+/* Enable U14 load switch, powers on the level shifter. */
+&exp_board_enable {
+    regulator-boot-on;
+};
+
 &pinctrl {
     uart1_default: uart1_default {
         group1 {
