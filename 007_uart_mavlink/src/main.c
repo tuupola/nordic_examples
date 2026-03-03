@@ -18,7 +18,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #define RX_TIMEOUT_US 100000
 
 /* Used for decoupling ISR from the main thread */
-#define RING_BUF_SIZE 512
+#define RING_BUF_SIZE 1024
 RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
@@ -30,7 +30,18 @@ static uint8_t buf_idx;
 
 static mavlink_message_t message;
 static mavlink_status_t status;
-static bool toggle;
+
+/* Work handlers for MAVLink TX */
+static void heartbeat_work_handler(struct k_work *work);
+static void radio_status_work_handler(struct k_work *work);
+static K_WORK_DEFINE(heartbeat_work, heartbeat_work_handler);
+static K_WORK_DEFINE(radio_status_work, radio_status_work_handler);
+
+/* Timers that trigger above work handlers */
+static void heartbeat_timer_handler(struct k_timer *timer);
+static void radio_status_timer_handler(struct k_timer *timer);
+static K_TIMER_DEFINE(heartbeat_timer, heartbeat_timer_handler, NULL);
+static K_TIMER_DEFINE(radio_status_timer, radio_status_timer_handler, NULL);
 
 static void process_mavlink(const uint8_t *data, size_t len) {
     for (size_t i = 0; i < len; i++) {
@@ -143,6 +154,30 @@ static int send_radio_status(void) {
     return uart_tx(uart_dev, tx_buf, len, SYS_FOREVER_US);
 }
 
+/* When timer triggers submit heartbeat to work queue */
+static void heartbeat_timer_handler(struct k_timer *timer) {
+    k_work_submit(&heartbeat_work);
+}
+
+/* When timer triggers submit radio status to work queue */
+static void radio_status_timer_handler(struct k_timer *timer) {
+    k_work_submit(&radio_status_work);
+}
+
+static void heartbeat_work_handler(struct k_work *work) {
+    int rc = send_heartbeat();
+    if (rc < 0) {
+        LOG_WRN("Heartbeat TX failed: %d", rc);
+    }
+}
+
+static void radio_status_work_handler(struct k_work *work) {
+    int rc = send_radio_status();
+    if (rc < 0) {
+        LOG_WRN("Radio status TX failed: %d", rc);
+    }
+}
+
 int main(void) {
     int rc;
 
@@ -164,8 +199,15 @@ int main(void) {
         return rc;
     }
 
-    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud, 2 Hz loop");
+    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud");
 
+    /* Fire after 1s, then every 1s */
+    k_timer_start(&heartbeat_timer, K_SECONDS(1), K_SECONDS(1));
+
+    /* Fire after 1.5s, then every 2s */
+    k_timer_start(&radio_status_timer, K_MSEC(1500), K_SECONDS(2));
+
+    /* Main loop processes MAVLink messages from ring buffer  */
     while (1) {
         static uint8_t tmp[256];
         uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
@@ -173,21 +215,7 @@ int main(void) {
             process_mavlink(tmp, len);
         }
 
-        /* Stupid toggling for demonstration purposes only */
-        if (toggle) {
-            rc = send_heartbeat();
-            if (rc < 0) {
-                LOG_WRN("Heartbeat TX failed: %d", rc);
-            }
-        } else {
-            rc = send_radio_status();
-            if (rc < 0) {
-                LOG_WRN("Radio status TX failed: %d", rc);
-            }
-        }
-        toggle = !toggle;
-
-        k_sleep(K_MSEC(500));
+        k_sleep(K_MSEC(100));
     }
     return 0;
 }
