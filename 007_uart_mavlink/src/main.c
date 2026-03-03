@@ -13,18 +13,20 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #define EXAMPLE_SYS_ID 1
 #define EXAMPLE_COMP_ID MAV_COMP_ID_ONBOARD_COMPUTER /* 191 */
 
+/* DMA buffers for the UART driver */
 #define RX_BUF_SIZE 256
-#define RX_TIMEOUT_US 100000 /* 100 ms idle timeout */
+#define RX_TIMEOUT_US 100000
 
+/* Used for decoupling ISR from the main thread */
 #define RING_BUF_SIZE 1024
 RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
+/* DMA buffers for the UART driver */
+static uint8_t tx_buf[MAVLINK_MAX_PACKET_LEN];
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static uint8_t buf_idx;
-
-static uint8_t tx_buf[MAVLINK_MAX_PACKET_LEN];
 
 static mavlink_message_t message;
 static mavlink_status_t status;
@@ -48,8 +50,9 @@ static void process_mavlink(const uint8_t *data, size_t len) {
     }
 }
 
-static void
-uart_callback(const struct device *dev, struct uart_event *event, void *user_data) {
+static void uart_callback(
+    const struct device *dev, struct uart_event *event, void *user_data
+) {
     switch (event->type) {
         case UART_RX_RDY:
             ring_buf_put(
@@ -129,6 +132,14 @@ int main(void) {
         uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
         if (len > 0) {
             process_mavlink(tmp, len);
+        }
+
+        uint32_t used = ring_buf_size_get(&rx_ring);
+        uint32_t free = ring_buf_space_get(&rx_ring);
+        LOG_INF("RX ring: %u/%u bytes used", used, RING_BUF_SIZE);
+
+        if (used > RING_BUF_SIZE * 3 / 4) {
+            LOG_WRN("RX buffer 75%% full");
         }
 
         rc = send_heartbeat();
