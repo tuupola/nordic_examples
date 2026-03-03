@@ -4,6 +4,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/ring_buffer.h>
 
 #include <common/mavlink.h>
 
@@ -14,6 +15,9 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 #define RX_BUF_SIZE 256
 #define RX_TIMEOUT_US 100000 /* 100 ms idle timeout */
+
+#define RING_BUF_SIZE 1024
+RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
@@ -47,7 +51,9 @@ static void process_mavlink(const uint8_t *data, size_t len) {
 static void uart_callback(const struct device *dev, struct uart_event *event, void *user_data) {
     switch (event->type) {
         case UART_RX_RDY:
-            process_mavlink(event->data.rx.buf + event->data.rx.offset, event->data.rx.len);
+            ring_buf_put(
+                &rx_ring, event->data.rx.buf + event->data.rx.offset, event->data.rx.len
+            );
             break;
 
         case UART_RX_BUF_REQUEST:
@@ -118,6 +124,12 @@ int main(void) {
     LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud, heartbeat 1 Hz");
 
     while (1) {
+        static uint8_t tmp[256];
+        uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
+        if (len > 0) {
+            process_mavlink(tmp, len);
+        }
+
         rc = send_heartbeat();
         if (rc < 0) {
             LOG_WRN("Heartbeat TX failed: %d", rc);
