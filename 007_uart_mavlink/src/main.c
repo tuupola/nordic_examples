@@ -18,7 +18,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #define RX_TIMEOUT_US 100000
 
 /* Used for decoupling ISR from the main thread */
-#define RING_BUF_SIZE 1024
+#define RING_BUF_SIZE 512
 RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
@@ -107,7 +107,7 @@ static int send_heartbeat(void) {
 
 static int send_radio_status(void) {
     mavlink_message_t msg;
-    uint8_t txbuf = (ring_buf_size_get(&rx_ring) * 100) / RING_BUF_SIZE;
+    uint8_t txbuf_free = (ring_buf_space_get(&rx_ring) * 100) / RING_BUF_SIZE;
 
     mavlink_msg_radio_status_pack(
         EXAMPLE_SYS_ID,
@@ -115,7 +115,7 @@ static int send_radio_status(void) {
         &msg,
         255,
         255,
-        txbuf,
+        txbuf_free,
         255,
         255,
         status.packet_rx_drop_count,
@@ -123,13 +123,23 @@ static int send_radio_status(void) {
     );
 
     uint16_t len = mavlink_msg_to_send_buffer(tx_buf, &msg);
-    LOG_INF(
-        "TX: RADIO_STATUS id=109 sys=%d comp=%d txbuf=%d rxerrors=%d",
-        EXAMPLE_SYS_ID,
-        EXAMPLE_COMP_ID,
-        txbuf,
-        status.packet_rx_drop_count
-    );
+    if (txbuf_free < 25) {
+        LOG_WRN(
+            "TX: RADIO_STATUS id=109 sys=%d comp=%d txbuf=%d rxerrors=%d",
+            EXAMPLE_SYS_ID,
+            EXAMPLE_COMP_ID,
+            txbuf_free,
+            status.packet_rx_drop_count
+        );
+    } else {
+        LOG_INF(
+            "TX: RADIO_STATUS id=109 sys=%d comp=%d txbuf=%d rxerrors=%d",
+            EXAMPLE_SYS_ID,
+            EXAMPLE_COMP_ID,
+            txbuf_free,
+            status.packet_rx_drop_count
+        );
+    }
     return uart_tx(uart_dev, tx_buf, len, SYS_FOREVER_US);
 }
 
@@ -161,11 +171,6 @@ int main(void) {
         uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
         if (len > 0) {
             process_mavlink(tmp, len);
-        }
-
-        uint32_t used = ring_buf_size_get(&rx_ring);
-        if (used > RING_BUF_SIZE * 3 / 4) {
-            LOG_WRN("RX buffer 75%% full");
         }
 
         /* Stupid toggling for demonstration purposes only */
