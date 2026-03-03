@@ -115,7 +115,7 @@ int main(void) {
         return rc;
     }
 
-    LOG_INF("UART1 RX=P0.18 RX, TX=P0.19 at 460800 baud, heartbeat 1 Hz");
+    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud, heartbeat 1 Hz");
 
     while (1) {
         rc = send_heartbeat();
