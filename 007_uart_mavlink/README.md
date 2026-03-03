@@ -20,7 +20,7 @@ $ nrfutil device program --firmware build/dfu_application.zip --serial-number $S
 ```
 $ picocom -b 115200 /dev/ttyACM0
 
-** Booting nRF Connect SDK v3.2.1-d8887f6f32df ***
+*** Booting nRF Connect SDK v3.2.1-d8887f6f32df ***
 *** Using Zephyr OS v4.2.99-ec78104f1569 ***
 Attempting to boot slot 0.
 Attempting to boot from address 0x8200.
@@ -29,23 +29,22 @@ I: Verifying signature against key 0.
 I: Hash: 0x3e...f9
 I: Firmware signature verified.
 Firmware version 2
-[00:00:00.753,723] <inf> spi_nor: GD25LE255E@0: 32 MiBy flash
-[00:00:00.756,103] <err> gpio_hogs: GPIO port npm1300_gpios not ready
 *** Booting nRF Connect SDK v3.2.1-d8887f6f32df ***
 *** Using Zephyr OS v4.2.99-ec78104f1569 ***
-[00:00:00.756,225] <inf> main: Listening on UART1 (P0.18 RX / P0.19 TX) at 460800 baud
-[00:00:00.780,029] <inf> main: ATTITUDE_QUATERNION id=31 from sys=1 comp=1
-[00:00:00.780,151] <inf> main: ATTITUDE id=30 from sys=1 comp=1
-[00:00:00.780,334] <inf> main: HIGHRES_IMU id=105 from sys=1 comp=1
-[00:00:00.780,456] <inf> main: LOCAL_POSITION_NED id=32 from sys=1 comp=1
-[00:00:00.780,578] <inf> main: ATTITUDE id=30 from sys=1 comp=1
-[00:00:00.791,503] <inf> main: ATTITUDE_QUATERNION id=31 from sys=1 comp=1
-[00:00:00.791,625] <inf> main: ATTITUDE id=30 from sys=1 comp=1
-[00:00:00.791,717] <inf> main: TIMESYNC id=111 from sys=1 comp=1
-[00:00:00.791,839] <inf> main: ALTITUDE id=141 from sys=1 comp=1
-[00:00:00.791,992] <inf> main: ATTITUDE_TARGET id=83 from sys=1 comp=1
-[00:00:00.792,053] <inf> main: EXTENDED_SYS_STATE id=245 from sys=1 comp=1
-[00:00:00.792,205] <inf> main: POSITION_TARGET_LOCAL_NED id=85 from sys=1 comp=1
+[00:00:00.255,828] <inf> spi_nor: GD25LE255E@0: 32 MiBy flash
+[00:00:00.292,297] <inf> main: UART1 TX=P0.18, RX=P0.19 at 460800 baud, 2 Hz loop
+[00:00:00.292,327] <inf> main: TX: RADIO_STATUS id=109 sys=1 comp=191 txbuf=100 rxerrors=0
+[00:00:00.792,633] <inf> main: RX: GPS_RAW_INT id=24 from sys=1 comp=1
+[00:00:00.792,877] <inf> main: RX: HIGHRES_IMU id=105 from sys=1 comp=1
+[00:00:00.793,060] <inf> main: RX: GPS_RAW_INT id=24 from sys=1 comp=1
+[00:00:00.793,212] <inf> main: RX: ATTITUDE id=30 from sys=1 comp=1
+[00:00:00.793,304] <inf> main: TX: HEARTBEAT id=0 sys=1 comp=191
+[00:00:01.293,518] <inf> main: RX: ATTITUDE_QUATERNION id=31 from sys=1 comp=1
+[00:00:01.293,731] <inf> main: RX: GPS_RAW_INT id=24 from sys=1 comp=1
+[00:00:01.293,914] <inf> main: RX: GPS_RAW_INT id=24 from sys=1 comp=1
+[00:00:01.294,067] <inf> main: RX: ATTITUDE id=30 from sys=1 comp=1
+[00:00:01.294,250] <inf> main: RX: GPS_RAW_INT id=24 from sys=1 comp=1
+[00:00:01.294,342] <inf> main: TX: RADIO_STATUS id=109 sys=1 comp=191 txbuf=50 rxerrors=0
 ...
 ctrl-a ctrl-x
 ```
