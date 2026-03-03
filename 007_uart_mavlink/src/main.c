@@ -30,6 +30,7 @@ static uint8_t buf_idx;
 
 static mavlink_message_t message;
 static mavlink_status_t status;
+static bool toggle;
 
 static void process_mavlink(const uint8_t *data, size_t len) {
     for (size_t i = 0; i < len; i++) {
@@ -37,7 +38,7 @@ static void process_mavlink(const uint8_t *data, size_t len) {
             const mavlink_message_info_t *info = mavlink_get_message_info(&message);
             if (info) {
                 LOG_INF(
-                    "%s id=%d from sys=%d comp=%d",
+                    "RX: %s id=%d from sys=%d comp=%d",
                     info->name,
                     message.msgid,
                     message.sysid,
@@ -55,6 +56,7 @@ static void uart_callback(
 ) {
     switch (event->type) {
         case UART_RX_RDY:
+            /* Move MAVLink parsing out of ISR context */
             ring_buf_put(
                 &rx_ring, event->data.rx.buf + event->data.rx.offset, event->data.rx.len
             );
@@ -86,7 +88,6 @@ static void uart_callback(
 
 static int send_heartbeat(void) {
     mavlink_message_t msg;
-    uint16_t len;
 
     mavlink_msg_heartbeat_pack(
         EXAMPLE_SYS_ID,
@@ -99,8 +100,36 @@ static int send_heartbeat(void) {
         MAV_STATE_ACTIVE
     );
 
-    len = mavlink_msg_to_send_buffer(tx_buf, &msg);
-    LOG_INF("HEARTBEAT bytes=%u sys=%d comp=%d", len, EXAMPLE_SYS_ID, EXAMPLE_COMP_ID);
+    uint16_t len = mavlink_msg_to_send_buffer(tx_buf, &msg);
+    LOG_INF("TX: HEARTBEAT id=0 sys=%d comp=%d", EXAMPLE_SYS_ID, EXAMPLE_COMP_ID);
+    return uart_tx(uart_dev, tx_buf, len, SYS_FOREVER_US);
+}
+
+static int send_radio_status(void) {
+    mavlink_message_t msg;
+    uint8_t txbuf = (ring_buf_size_get(&rx_ring) * 100) / RING_BUF_SIZE;
+
+    mavlink_msg_radio_status_pack(
+        EXAMPLE_SYS_ID,
+        EXAMPLE_COMP_ID,
+        &msg,
+        255,
+        255,
+        txbuf,
+        255,
+        255,
+        status.packet_rx_drop_count,
+        0
+    );
+
+    uint16_t len = mavlink_msg_to_send_buffer(tx_buf, &msg);
+    LOG_INF(
+        "TX: RADIO_STATUS id=109 sys=%d comp=%d txbuf=%d rxerrors=%d",
+        EXAMPLE_SYS_ID,
+        EXAMPLE_COMP_ID,
+        txbuf,
+        status.packet_rx_drop_count
+    );
     return uart_tx(uart_dev, tx_buf, len, SYS_FOREVER_US);
 }
 
@@ -125,7 +154,7 @@ int main(void) {
         return rc;
     }
 
-    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud, heartbeat 1 Hz");
+    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud, 2 Hz loop");
 
     while (1) {
         static uint8_t tmp[256];
@@ -135,18 +164,25 @@ int main(void) {
         }
 
         uint32_t used = ring_buf_size_get(&rx_ring);
-        uint32_t free = ring_buf_space_get(&rx_ring);
-        LOG_INF("RX ring: %u/%u bytes used", used, RING_BUF_SIZE);
-
         if (used > RING_BUF_SIZE * 3 / 4) {
             LOG_WRN("RX buffer 75%% full");
         }
 
-        rc = send_heartbeat();
-        if (rc < 0) {
-            LOG_WRN("Heartbeat TX failed: %d", rc);
+        /* Stupid toggling for demonstration purposes only */
+        if (toggle) {
+            rc = send_heartbeat();
+            if (rc < 0) {
+                LOG_WRN("Heartbeat TX failed: %d", rc);
+            }
+        } else {
+            rc = send_radio_status();
+            if (rc < 0) {
+                LOG_WRN("Radio status TX failed: %d", rc);
+            }
         }
-        k_sleep(K_SECONDS(1));
+        toggle = !toggle;
+
+        k_sleep(K_MSEC(500));
     }
     return 0;
 }
