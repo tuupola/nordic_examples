@@ -1,3 +1,4 @@
+#include <string.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/timeutil.h>
 
@@ -9,13 +10,20 @@ static rid_basic_id_t basic_id;
 static rid_location_t location;
 static rid_system_t system;
 
-void uav_basic_id_get(void) {
+void uav_basic_id_get(rid_basic_id_t *msg) {
     rid_basic_id_init(&basic_id);
     rid_basic_id_set_type(&basic_id, RID_ID_TYPE_SERIAL_NUMBER);
     rid_basic_id_set_ua_type(&basic_id, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
     rid_basic_id_set_uas_id(&basic_id, "1ABCD2345EF678XYZ");
+    memcpy(msg, &basic_id, sizeof(rid_basic_id_t));
+}
 
-    LOG_HEXDUMP_INF(&basic_id, sizeof(basic_id), "Basic ID");
+void uav_location_get(rid_location_t *msg) {
+    memcpy(msg, &location, sizeof(rid_location_t));
+}
+
+void uav_system_get(rid_system_t *msg) {
+    memcpy(msg, &system, sizeof(rid_system_t));
 }
 
 void uav_location_update(const struct nrf_modem_gnss_pvt_data_frame *pvt) {
@@ -44,12 +52,8 @@ void uav_system_update(const struct nrf_modem_gnss_pvt_data_frame *pvt) {
     uint32_t unixtime = (uint32_t)timeutil_timegm(&tm);
 
     rid_system_init(&system);
-    rid_system_set_operator_location_type(
-        &system, RID_OPERATOR_LOCATION_TYPE_TAKEOFF
-    );
-    rid_system_set_classification_type(
-        &system, RID_CLASSIFICATION_TYPE_UNDECLARED
-    );
+    rid_system_set_operator_location_type(&system, RID_OPERATOR_LOCATION_TYPE_TAKEOFF);
+    rid_system_set_classification_type(&system, RID_CLASSIFICATION_TYPE_UNDECLARED);
     rid_system_set_operator_latitude(&system, 62.6833379);
     rid_system_set_operator_longitude(&system, 21.9833208);
     rid_system_set_area_count(&system, 1);
@@ -62,17 +66,11 @@ void uav_system_update(const struct nrf_modem_gnss_pvt_data_frame *pvt) {
 }
 
 void uav_message_pack_get(rid_message_pack_t *pack) {
+    rid_basic_id_t bid;
+
     rid_message_pack_init(pack);
-
-    /* Basic ID does not change. */
-    rid_basic_id_init(&basic_id);
-    rid_basic_id_set_type(&basic_id, RID_ID_TYPE_SERIAL_NUMBER);
-    rid_basic_id_set_ua_type(&basic_id, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
-    rid_basic_id_set_uas_id(&basic_id, "1ABCD2345EF678XYZ");
-
-    LOG_HEXDUMP_INF(&basic_id, sizeof(basic_id), "Basic ID");
-
-    rid_message_pack_add_message(pack, &basic_id);
+    uav_basic_id_get(&bid);
+    rid_message_pack_add_message(pack, &bid);
     rid_message_pack_add_message(pack, &location);
     rid_message_pack_add_message(pack, &system);
 }
