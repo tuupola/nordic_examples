@@ -19,7 +19,6 @@ void uav_basic_id_get(void) {
 }
 
 void uav_location_update(const struct nrf_modem_gnss_pvt_data_frame *pvt) {
-    /* Create a location Remote ID message. */
     rid_location_init(&location);
     rid_location_set_operational_status(&location, RID_OPERATIONAL_STATUS_AIRBORNE);
     rid_location_set_height_type(&location, RID_HEIGHT_TYPE_AGL);

@@ -15,6 +15,26 @@ $ SERIAL_NUMBER=$(nrfutil device list | grep THINGY)
 $ nrfutil device program --firmware build/dfu_application.zip --serial-number $SERIAL_NUMBER
 ```
 
+Or if you are using J-Link.
+
+```
+$ nrfutil device program --firmware build/merged.hex --traits jlink
+```
+
+Thingies are factory shipped with `CTRL-AP` protection on. You might need to disable it first.
+
+```
+$ nrfutil device program --firmware build/merged.hex --traits jlink
+ * 801006468: Failed to attach to target: The Application core access port is protected (All) (NotAvailableBecauseProtection)
+$ nrfutil device recover --traits jlink
+$ nrfutil device program --firmware build/merged.hex --traits jlink
+[00:00:02] ###### 100% [3/3 801006468] Programmed
+```
+
+
+
+
+
 ## Connect 
 
 ```
