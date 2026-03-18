@@ -1,0 +1,5 @@
+/* Enable uart1 to receive data from nRF9151 */
+&uart1 {
+    status = "okay";
+    current-speed = <115200>;
+};
