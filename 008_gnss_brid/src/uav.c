@@ -58,7 +58,7 @@ void uav_system_update(const struct nrf_modem_gnss_pvt_data_frame *pvt) {
     rid_system_set_operator_longitude(&system, 21.9833208);
     rid_system_set_area_count(&system, 1);
     rid_system_set_area_radius(&system, 0);
-    rid_system_set_area_ceiling(&system, pvt->altitude + 50.0f);
+    rid_system_set_area_ceiling(&system, 120.0f);
     rid_system_set_area_floor(&system, 0.0f);
     rid_system_set_unixtime(&system, unixtime);
 
