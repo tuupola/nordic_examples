@@ -1,8 +1,4 @@
-/*
- * Re-enable uart1 for the RID data channel to the nRF5340.
- * The NS board DTS disables it (reserved for modem traces).
- * Must match the baud rate set on the nRF5340 side.
- */
+/* Enable uart1 for the RID data channel to the nRF5340. */
 &uart1 {
     status = "okay";
     current-speed = <115200>;
