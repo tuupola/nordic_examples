@@ -5,7 +5,13 @@ Make sure you are in SDK shell to have access to the toolchain.
 ```
 $ nrfutil sdk-manager toolchain launch --ncs-version v3.2.1 --shell
 (v3.2.1) host% source ~/ncs/v3.2.1/zephyr/zephyr-env.sh
-(v3.2.1) host% west build -b thingy91x/nrf9151/ns
+(v3.2.1) host% west build -b thingy91x/nrf9151/ns --pristine
+```
+
+Flash with `west`. You do must be in SDK shell for this.
+
+```
+(v3.2.1) host% west --verbose flash --recover
 ```
 
 Flash with `nrfutil`. You do not need to be in SDK shell for this.
@@ -15,7 +21,7 @@ $ SERIAL_NUMBER=$(nrfutil device list | grep THINGY)
 $ nrfutil device program --firmware build/dfu_application.zip --serial-number $SERIAL_NUMBER
 ```
 
-## Connect 
+## Connect
 
 ```
 $ picocom -b 115200 /dev/ttyACM0
@@ -49,7 +55,7 @@ Firmware version 2
 ctrl-a ctrl-x
 ```
 
-Also if you check a NuttX shell in a connected PX4 flight controller you should see this 
+Also if you check a NuttX shell in a connected PX4 flight controller you should see this
 device.
 
 ```
