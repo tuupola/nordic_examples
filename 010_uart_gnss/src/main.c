@@ -17,27 +17,27 @@ RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
 
 /* DMA buffers for the UART driver */
-static uint8_t tx_buf[512];
+//static uint8_t tx_buf[512];
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static uint8_t buf_idx;
 
 static void process_gnss(const uint8_t *data, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-    }
+    LOG_HEXDUMP_INF(data, len, "GNSS");
 }
 
-static void uart_callback(
-    const struct device *dev, struct uart_event *event, void *user_data
-) {
+static void
+uart_callback(const struct device *dev, struct uart_event *event, void *user_data) {
     switch (event->type) {
         case UART_RX_RDY:
             /* Move GNSS parsing out of ISR context */
+            LOG_DBG("UART_RX_RDY");
             ring_buf_put(
                 &rx_ring, event->data.rx.buf + event->data.rx.offset, event->data.rx.len
             );
             break;
 
         case UART_RX_BUF_REQUEST:
+            LOG_DBG("UART_RX_BUF_REQUEST");
             buf_idx = (buf_idx + 1) % 2;
             uart_rx_buf_rsp(dev, rx_buf[buf_idx], RX_BUF_SIZE);
             break;
@@ -50,6 +50,7 @@ static void uart_callback(
             break;
 
         case UART_TX_DONE:
+            LOG_DBG("UART_TX_DONE");
             break;
 
         case UART_TX_ABORTED:
@@ -83,7 +84,6 @@ int main(void) {
     }
 
     LOG_INF("UART1 TX=P0.19, RX=P0.18 at 115200 baud");
-
 
     /* Main loop processes GNSS messages from ring buffer  */
     while (1) {
