@@ -82,7 +82,7 @@ int main(void) {
         return rc;
     }
 
-    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 460800 baud");
+    LOG_INF("UART1 TX=P0.19, RX=P0.18 at 115200 baud");
 
 
     /* Main loop processes GNSS messages from ring buffer  */
