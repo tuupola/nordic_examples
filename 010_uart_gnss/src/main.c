@@ -83,12 +83,13 @@ int main(void) {
         return rc;
     }
 
-    LOG_INF("UART1 TX=P0.19, RX=P0.18 at 115200 baud");
+    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 115200 baud");
 
     /* Main loop processes GNSS messages from ring buffer  */
     while (1) {
         static uint8_t tmp[256];
         uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
+        LOG_INF("ring_buf_get() %d bytes", len);
         if (len > 0) {
             process_gnss(tmp, len);
         }
