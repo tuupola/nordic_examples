@@ -4,14 +4,16 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/ring_buffer.h>
 
+#include "lwgps/lwgps.h"
+
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 /* DMA buffers for the UART driver */
-#define RX_BUF_SIZE 256
+#define RX_BUF_SIZE 2048
 #define RX_TIMEOUT_US 100000
 
 /* Used for decoupling ISR from the main thread */
-#define RING_BUF_SIZE 1024
+#define RING_BUF_SIZE 2048
 RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
@@ -20,9 +22,16 @@ static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
 //static uint8_t tx_buf[512];
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static uint8_t buf_idx;
+lwgps_t gps;
 
 static void process_gnss(const uint8_t *data, size_t len) {
     LOG_HEXDUMP_INF(data, len, "GNSS");
+    LOG_INF("GNSS data %d bytes", len);
+
+    lwgps_process(&gps, data, len);
+    LOG_INF("lat=%.6f lon=%.6f fix=%d sats=%d",
+        (double)gps.latitude, (double)gps.longitude, gps.fix, gps.sats_in_use
+    );
 }
 
 static void
@@ -83,11 +92,13 @@ int main(void) {
         return rc;
     }
 
+    lwgps_init(&gps);
+
     LOG_INF("UART1 TX=P0.18, RX=P0.19 at 115200 baud");
 
     /* Main loop processes GNSS messages from ring buffer  */
     while (1) {
-        static uint8_t tmp[256];
+        static uint8_t tmp[RX_BUF_SIZE];
         uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
         LOG_INF("ring_buf_get() %d bytes", len);
         if (len > 0) {

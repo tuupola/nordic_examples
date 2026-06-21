@@ -7,3 +7,6 @@
 [submodule "008_gnss_brid/external/librid"]
 	path = 008_gnss_brid/external/librid
 	url = https://github.com/tuupola/librid.git
+[submodule "010_uart_gnss/external/lwgps"]
+	path = 010_uart_gnss/external/lwgps
+	url = https://github.com/MaJerle/lwgps.git
