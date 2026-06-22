@@ -9,7 +9,7 @@
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 /* DMA buffers for the UART driver */
-#define RX_BUF_SIZE 2048
+#define RX_BUF_SIZE 1024
 #define RX_TIMEOUT_US 10000
 
 /* Used for decoupling ISR from the main thread */
@@ -112,7 +112,7 @@ int main(void) {
 
     /* Main loop processes GNSS messages from ring buffer  */
     while (1) {
-        static uint8_t tmp[RX_BUF_SIZE];
+        static uint8_t tmp[RING_BUF_SIZE];
         /* Wait for UART_RX_RDY to give semaphore. */
         k_sem_take(&rx_sem, K_FOREVER);
         uint32_t len = ring_buf_get(&rx_ring, tmp, sizeof(tmp));
