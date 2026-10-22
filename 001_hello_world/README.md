@@ -15,7 +15,16 @@ $ SERIAL_NUMBER=$(nrfutil device list | grep THINGY)
 $ nrfutil device program --firmware build/dfu_application.zip --serial-number $SERIAL_NUMBER
 ```
 
-## Connect 
+NRF93M1DK needs recent NCS.
+
+```
+$ nrfutil sdk-manager toolchain launch --ncs-version v3.5.0-preview4 --shell
+(v3.5.0-preview4) host% source ~/ncs/v3.5.0-preview4/zephyr/zephyr-env.sh
+(v3.5.0-preview4) host% west build -b nrf93m1dk/nrf54l15/cpuapp --pristine
+(v3.5.0-preview4) host% west flash
+```
+
+## Connect
 
 ```
 $ picocom -b 115200 /dev/ttyACM0
