@@ -1,0 +1,7 @@
+&uart30 {
+	zephyr,pm-device-runtime-auto;
+};
+
+&modem {
+	zephyr,pm-device-runtime-auto;
+};
