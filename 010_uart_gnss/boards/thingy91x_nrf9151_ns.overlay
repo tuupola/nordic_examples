@@ -1,10 +1,8 @@
-/*
- * UART1 on P0.18 (TX) / P0.19 (RX) at 460800 baud.
- *
- * uart1 is disabled in the default NS board DTS (reserved for modem
- * traces). This overlay re-enables it on free GPIO pins for MAVLink
- * reception.
- */
+/ {
+    aliases {
+        gnss-uart = &uart1;
+    };
+};
 
 /* Enable U14 load switch, powers on the level shifter. */
 &exp_board_enable {

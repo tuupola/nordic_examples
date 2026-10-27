@@ -18,7 +18,7 @@ RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static K_SEM_DEFINE(rx_sem, 0, 1);
 
-static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(uart1));
+static const struct device *const uart_dev = DEVICE_DT_GET(DT_ALIAS(gnss_uart));
 
 /* DMA buffers for the UART driver */
 //static uint8_t tx_buf[512];
