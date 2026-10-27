@@ -18,7 +18,14 @@ RING_BUF_DECLARE(rx_ring, RING_BUF_SIZE);
 
 static K_SEM_DEFINE(rx_sem, 0, 1);
 
-static const struct device *const uart_dev = DEVICE_DT_GET(DT_ALIAS(gnss_uart));
+#define GNSS_UART DT_ALIAS(gnss_uart)
+#define GNSS_STATE DT_PHANDLE_BY_IDX(GNSS_UART, pinctrl_0, 0)
+#define GNSS_TX_PSEL DT_PROP_BY_IDX(DT_CHILD(GNSS_STATE, group1), psels, 0)
+#define GNSS_RX_PSEL DT_PROP_BY_IDX(DT_CHILD(GNSS_STATE, group2), psels, 0)
+#define GNSS_PIN_PORT(psel) (((psel) & 0x1ff) >> 5)
+#define GNSS_PIN_NUM(psel) ((psel) & 0x1f)
+
+static const struct device *const uart_dev = DEVICE_DT_GET(GNSS_UART);
 
 /* DMA buffers for the UART driver */
 //static uint8_t tx_buf[512];
@@ -89,7 +96,7 @@ int main(void) {
     int rc;
 
     if (!device_is_ready(uart_dev)) {
-        LOG_ERR("UART1 device not ready");
+        LOG_ERR("%s not ready", uart_dev->name);
         return -ENODEV;
     }
 
@@ -108,7 +115,14 @@ int main(void) {
 
     lwgps_init(&gps);
 
-    LOG_INF("UART1 TX=P0.18, RX=P0.19 at 115200 baud");
+    LOG_INF(
+        "TX=P%u.%02u RX=P%u.%02u at %u baud",
+        GNSS_PIN_PORT(GNSS_TX_PSEL),
+        GNSS_PIN_NUM(GNSS_TX_PSEL),
+        GNSS_PIN_PORT(GNSS_RX_PSEL),
+        GNSS_PIN_NUM(GNSS_RX_PSEL),
+        DT_PROP(GNSS_UART, current_speed)
+    );
 
     /* Main loop processes GNSS messages from ring buffer  */
     while (1) {
