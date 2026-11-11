@@ -10,3 +10,6 @@
 [submodule "010_uart_gnss/external/lwgps"]
 	path = 010_uart_gnss/external/lwgps
 	url = https://github.com/MaJerle/lwgps.git
+[submodule "nrf54lm20a/004_rid_scan/external/librid"]
+	path = nrf54lm20a/004_rid_scan/external/librid
+	url = https://github.com/tuupola/librid.git
