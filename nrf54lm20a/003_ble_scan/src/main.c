@@ -21,7 +21,7 @@ int main(void) {
         return rc;
     }
 
-    rc = bt_le_scan_start(BT_LE_SCAN_PASSIVE, callback);
+    rc = bt_le_scan_start(BT_LE_SCAN_CODED_PASSIVE, callback);
     if (rc < 0) {
         LOG_ERR("Bluetooth LE scan start failed: %d", rc);
         return rc;
