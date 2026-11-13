@@ -69,7 +69,8 @@ callback(const bt_addr_le_t *addr, int8_t rssi, uint8_t type, struct net_buf_sim
     //LOG_HEXDUMP_DBG(ad->data, ad->len, "ad");
     LOG_DBG("protocol_version=%u message_type=%u", version, message_type);
     rc = rid_message_to_json(message, json, sizeof(json), NULL);
-    printf("%s\n", json);
+    //printf("%s\n", json);
+    printf("{\"mac\": \"%s\", %s\n", bt_addr_str(&addr->a), json + 1);
 }
 
 int main(void) {
