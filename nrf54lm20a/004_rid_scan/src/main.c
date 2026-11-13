@@ -71,12 +71,15 @@ callback(const bt_addr_le_t *addr, int8_t rssi, uint8_t type, struct net_buf_sim
         return;
     }
 
-    /* Add the mac address to the JSON output. */
+    /* Add the mac address to the JSON output and dump. */
     printf("{\"mac\": \"%s\", %s\n", bt_addr_str(&addr->a), json + 1);
 }
 
 int main(void) {
     int rc;
+
+    /* Give console some time to catch up. */
+    k_msleep(1000);
 
     LOG_INF("librid %s", rid_version_to_string());
     LOG_INF("board=%s soc=%s", CONFIG_BOARD, CONFIG_SOC);
