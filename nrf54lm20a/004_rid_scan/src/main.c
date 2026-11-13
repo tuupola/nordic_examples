@@ -38,7 +38,7 @@ static bool filter_rid(struct bt_data *data, void *user_data) {
         return true;
     }
 
-    /* If all above is tru save Remote ID bytes to buffer. */
+    /* If all above is true save Remote ID bytes to buffer. */
     *buffer = data->data + BLUETOOTH_HEADER_SIZE;
     return false;
 }
@@ -46,30 +46,32 @@ static bool filter_rid(struct bt_data *data, void *user_data) {
 static void
 callback(const bt_addr_le_t *addr, int8_t rssi, uint8_t type, struct net_buf_simple *ad) {
     int rc;
+    static char json[2048];
     const uint8_t *buffer = NULL;
     const rid_message_t *message;
-    rid_protocol_version_t version;
-    rid_message_type_t message_type;
     struct net_buf_simple_state state;
-    static char json[2048];
 
     net_buf_simple_save(ad, &state);
     bt_data_parse(ad, filter_rid, &buffer);
     net_buf_simple_restore(ad, &state);
 
+    /* Buffer has data only if we got a Remote ID. */
     if (buffer == NULL) {
         return;
     }
 
     message = (const rid_message_t *)buffer;
-    version = rid_message_get_protocol_version(message);
-    message_type = rid_message_get_type(message);
 
     LOG_DBG("%s rssi=%d type=%u len=%u", bt_addr_le_str(addr), rssi, type, ad->len);
-    //LOG_HEXDUMP_DBG(ad->data, ad->len, "ad");
-    LOG_DBG("protocol_version=%u message_type=%u", version, message_type);
+    LOG_HEXDUMP_DBG(ad->data, ad->len, "ad");
+
     rc = rid_message_to_json(message, json, sizeof(json), NULL);
-    //printf("%s\n", json);
+    if (rc < 0) {
+        LOG_ERR("JSON encode failed: %s", rid_error_to_string(rc));
+        return;
+    }
+
+    /* Add the mac address to the JSON output. */
     printf("{\"mac\": \"%s\", %s\n", bt_addr_str(&addr->a), json + 1);
 }
 
