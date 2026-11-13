@@ -19,4 +19,5 @@ zephyr_library_sources(
     external/librid/src/self_id.c
     external/librid/src/transport.c
     external/librid/src/version.c
+    external/librid/src/json.c
 )

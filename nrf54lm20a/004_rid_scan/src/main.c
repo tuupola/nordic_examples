@@ -45,11 +45,13 @@ static bool filter_rid(struct bt_data *data, void *user_data) {
 
 static void
 callback(const bt_addr_le_t *addr, int8_t rssi, uint8_t type, struct net_buf_simple *ad) {
+    int rc;
     const uint8_t *buffer = NULL;
     const rid_message_t *message;
     rid_protocol_version_t version;
     rid_message_type_t message_type;
     struct net_buf_simple_state state;
+    static char json[2048];
 
     net_buf_simple_save(ad, &state);
     bt_data_parse(ad, filter_rid, &buffer);
@@ -63,9 +65,11 @@ callback(const bt_addr_le_t *addr, int8_t rssi, uint8_t type, struct net_buf_sim
     version = rid_message_get_protocol_version(message);
     message_type = rid_message_get_type(message);
 
-    LOG_INF("%s rssi=%d type=%u len=%u", bt_addr_le_str(addr), rssi, type, ad->len);
-    //LOG_HEXDUMP_INF(ad->data, ad->len, "ad");
-    LOG_INF("protocol_version=%u message_type=%u", version, message_type);
+    LOG_DBG("%s rssi=%d type=%u len=%u", bt_addr_le_str(addr), rssi, type, ad->len);
+    //LOG_HEXDUMP_DBG(ad->data, ad->len, "ad");
+    LOG_DBG("protocol_version=%u message_type=%u", version, message_type);
+    rc = rid_message_to_json(message, json, sizeof(json), NULL);
+    printf("%s\n", json);
 }
 
 int main(void) {
