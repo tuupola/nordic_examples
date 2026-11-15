@@ -13,3 +13,6 @@
 [submodule "nrf54lm20a/004_rid_scan/external/librid"]
 	path = nrf54lm20a/004_rid_scan/external/librid
 	url = https://github.com/tuupola/librid.git
+[submodule "nrf54lm20a/006_rid_broadcast/external/librid"]
+	path = nrf54lm20a/006_rid_broadcast/external/librid
+	url = https://github.com/tuupola/librid.git

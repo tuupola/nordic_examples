@@ -1,0 +1,7 @@
+&uart21 {
+    current-speed = <9600>;
+
+    gnss: gnss {
+        compatible = "gnss-nmea-generic";
+    };
+};
