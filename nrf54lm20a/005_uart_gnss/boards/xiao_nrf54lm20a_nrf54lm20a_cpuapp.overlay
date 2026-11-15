@@ -1,0 +1,9 @@
+/ {
+    aliases {
+        gnss-uart = &uart21;
+    };
+};
+
+&uart21 {
+    current-speed = <9600>;
+};
