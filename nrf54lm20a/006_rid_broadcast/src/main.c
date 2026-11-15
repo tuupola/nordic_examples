@@ -8,6 +8,7 @@
 #include <rid/basic_id.h>
 #include <rid/location.h>
 #include <rid/message_pack.h>
+#include <rid/operator_id.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
@@ -106,17 +107,23 @@ GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 
 int main(void) {
     rid_basic_id_t basic_id;
+    rid_operator_id_t operator_id;
 
     rid_message_pack_init(&message_pack);
 
     rid_basic_id_init(&basic_id);
     rid_basic_id_set_type(&basic_id, RID_ID_TYPE_SERIAL_NUMBER);
     rid_basic_id_set_ua_type(&basic_id, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
-    rid_basic_id_set_uas_id(&basic_id, "1ABCD2345EF678XYZ", strlen("1ABCD2345EF678XYZ"));
+    rid_basic_id_set_uas_id(&basic_id, "DEADBEEFDEADBEEF", strlen("DEADBEEFDEADBEEF"));
     rid_message_pack_add_message(&message_pack, &basic_id);
 
     rid_location_init(&location);
     rid_message_pack_add_message(&message_pack, &location);
+
+    rid_operator_id_init(&operator_id);
+    rid_operator_id_set_type(&operator_id, RID_OPERATOR_ID_TYPE_DEFAULT);
+    rid_operator_id_set(&operator_id, "FIN87astrdge12k8");
+    rid_message_pack_add_message(&message_pack, &operator_id);
 
     if (!device_is_ready(GNSS_DEV)) {
         LOG_ERR("%s not ready", GNSS_DEV->name);
