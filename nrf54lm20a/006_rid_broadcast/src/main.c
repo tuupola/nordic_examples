@@ -4,18 +4,17 @@
 #include <zephyr/logging/log.h>
 
 #include <rid/location.h>
+#include <rid/message_pack.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 #define GNSS_DEV DEVICE_DT_GET(DT_NODELABEL(gnss))
 
-static int location_from_gnss(rid_location_t *location, const struct gnss_data *data) {
-    int rc;
+static rid_message_pack_t message_pack;
+static rid_location_t location;
 
-    rc = rid_location_init(location);
-    if (rc < 0) {
-        return rc;
-    }
+static int update_location(rid_location_t *location, const struct gnss_data *data) {
+    int rc;
 
     /* If we have no fix set location invalid. */
     if (data->info.fix_status == GNSS_FIX_STATUS_NO_FIX) {
@@ -76,31 +75,37 @@ static int location_from_gnss(rid_location_t *location, const struct gnss_data *
 
 static void gnss_data_cb(const struct device *dev, const struct gnss_data *data) {
     int rc;
-    static char json[512];
-    rid_location_t location;
+    uint8_t index;
+    static char json[1024];
 
     ARG_UNUSED(dev);
 
-    rc = location_from_gnss(&location, data);
+    /* Update the location message with data from GNSS. */
+    rc = update_location(&location, data);
     if (rc < 0) {
-        LOG_ERR("location encode failed: %s", rid_error_to_string(rc));
+        LOG_ERR("Location update failed: %s", rid_error_to_string(rc));
         return;
     }
 
-    LOG_HEXDUMP_DBG(&location, sizeof(location), "location");
+    /* Replace the location message in the pack. */
+    rid_message_pack_find_message_index_by_type(
+        &message_pack, RID_MESSAGE_TYPE_LOCATION, 0, &index
+    );
+    rid_message_pack_set_message_at(&message_pack, index, &location);
 
-    rc = rid_location_to_json(&location, json, sizeof(json), NULL);
-    if (rc < 0) {
-        LOG_ERR("location json failed: %s", rid_error_to_string(rc));
-        return;
-    }
+    LOG_HEXDUMP_DBG(&message_pack, rid_message_pack_size(&message_pack), "message_pack");
 
+    rid_message_pack_to_json(&message_pack, json, sizeof(json), NULL);
     LOG_INF("%s", json);
 }
 
 GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 
 int main(void) {
+    rid_message_pack_init(&message_pack);
+    rid_location_init(&location);
+    rid_message_pack_add_message(&message_pack, &location);
+
     if (!device_is_ready(GNSS_DEV)) {
         LOG_ERR("%s not ready", GNSS_DEV->name);
         return -ENODEV;
