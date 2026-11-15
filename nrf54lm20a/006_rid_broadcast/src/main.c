@@ -1,8 +1,11 @@
+#include <string.h>
+
 #include <zephyr/device.h>
 #include <zephyr/drivers/gnss.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include <rid/basic_id.h>
 #include <rid/location.h>
 #include <rid/message_pack.h>
 
@@ -102,7 +105,16 @@ static void gnss_data_cb(const struct device *dev, const struct gnss_data *data)
 GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 
 int main(void) {
+    rid_basic_id_t basic_id;
+
     rid_message_pack_init(&message_pack);
+
+    rid_basic_id_init(&basic_id);
+    rid_basic_id_set_type(&basic_id, RID_ID_TYPE_SERIAL_NUMBER);
+    rid_basic_id_set_ua_type(&basic_id, RID_UA_TYPE_HELICOPTER_OR_MULTIROTOR);
+    rid_basic_id_set_uas_id(&basic_id, "1ABCD2345EF678XYZ", strlen("1ABCD2345EF678XYZ"));
+    rid_message_pack_add_message(&message_pack, &basic_id);
+
     rid_location_init(&location);
     rid_message_pack_add_message(&message_pack, &location);
 
