@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gnss.h>
 #include <zephyr/kernel.h>
@@ -15,6 +16,14 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 #define GNSS_DEV DEVICE_DT_GET(DT_NODELABEL(gnss))
 
 static rid_message_pack_t message_pack;
+
+static uint8_t svc_data[] = {0xfa, 0xff, 0x0d, 0x00};
+
+static const struct bt_data ad[] = {
+    BT_DATA(BT_DATA_SVC_DATA16, svc_data, 4),
+};
+
+static struct bt_le_ext_adv *adv;
 
 static int update_location(rid_location_t *location, const struct gnss_data *data) {
     int rc;
@@ -110,7 +119,38 @@ static void gnss_data_cb(const struct device *dev, const struct gnss_data *data)
 
 GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 
+static int start_advertising(void) {
+    int rc;
+    const struct bt_le_adv_param *param = BT_LE_ADV_PARAM(
+        BT_LE_ADV_OPT_EXT_ADV | BT_LE_ADV_OPT_CODED,
+        BT_GAP_ADV_SLOW_INT_MIN,
+        BT_GAP_ADV_SLOW_INT_MAX,
+        NULL
+    );
+
+    rc = bt_le_ext_adv_create(param, NULL, &adv);
+    if (rc < 0) {
+        LOG_ERR("bt_le_ext_adv_create() failed: %d", rc);
+        return rc;
+    }
+
+    rc = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+    if (rc < 0) {
+        LOG_ERR("bt_le_ext_adv_set_data() failed: %d", rc);
+        return rc;
+    }
+
+    rc = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+    if (rc < 0) {
+        LOG_ERR("bt_le_ext_adv_start(): %d", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
 int main(void) {
+    int rc;
     rid_basic_id_t basic_id;
     rid_operator_id_t operator_id;
     rid_location_t location;
@@ -135,7 +175,20 @@ int main(void) {
         LOG_ERR("%s not ready", GNSS_DEV->name);
         return -ENODEV;
     }
-
     LOG_INF("GNSS ready");
+
+    rc = bt_enable(NULL);
+    if (rc < 0) {
+        LOG_ERR("bt_enable() failed: %d", rc);
+        return rc;
+    }
+    LOG_INF("Bluetooth initialized.");
+
+    rc = start_advertising();
+    if (rc < 0) {
+        return rc;
+    }
+    LOG_INF("Extended advertising started");
+
     return 0;
 }

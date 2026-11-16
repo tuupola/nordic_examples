@@ -1,3 +1,27 @@
+/* Use the SoftDevice Controller instead of the Zephyr link layer. */
+/ {
+    chosen {
+        zephyr,bt-hci = &bt_hci_sdc;
+    };
+};
+
+/* Turn the Zephyr link layer off. */
+&bt_hci_controller {
+    status = "disabled";
+};
+
+/* Use the onboard crystal for the 32 kHz clock source. */
+&lfclk {
+    status = "okay";
+    k32src = "xtal";
+    k32src-accuracy-ppm = <50>;
+};
+
+/* Enable the 32 MHz high-frequency oscillator. */
+&xo {
+    status = "okay";
+};
+
 &uart21 {
     current-speed = <9600>;
 
