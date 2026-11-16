@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(010_uart_gnss)
+project(006_rid_broadcast)
 
 zephyr_include_directories(external/librid/include)
 

@@ -15,7 +15,6 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 #define GNSS_DEV DEVICE_DT_GET(DT_NODELABEL(gnss))
 
 static rid_message_pack_t message_pack;
-static rid_location_t location;
 
 static int update_location(rid_location_t *location, const struct gnss_data *data) {
     int rc;
@@ -81,10 +80,19 @@ static void gnss_data_cb(const struct device *dev, const struct gnss_data *data)
     int rc;
     uint8_t index;
     static char json[1024];
+    rid_location_t location;
 
     ARG_UNUSED(dev);
 
-    /* Update the location message with data from GNSS. */
+    /* Find the index of the location message. We assume it exists. */
+    rid_message_pack_find_message_index_by_type(
+        &message_pack, RID_MESSAGE_TYPE_LOCATION, 0, &index
+    );
+
+    /* Make a copy we can work on. */
+    rid_message_pack_copy_message_at(&message_pack, index, &location);
+
+    /* Update the copy with data from GNSS. */
     rc = update_location(&location, data);
     if (rc < 0) {
         LOG_ERR("Location update failed: %s", rid_error_to_string(rc));
@@ -92,9 +100,6 @@ static void gnss_data_cb(const struct device *dev, const struct gnss_data *data)
     }
 
     /* Replace the location message in the pack. */
-    rid_message_pack_find_message_index_by_type(
-        &message_pack, RID_MESSAGE_TYPE_LOCATION, 0, &index
-    );
     rid_message_pack_set_message_at(&message_pack, index, &location);
 
     LOG_HEXDUMP_DBG(&message_pack, rid_message_pack_size(&message_pack), "message_pack");
@@ -108,6 +113,7 @@ GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 int main(void) {
     rid_basic_id_t basic_id;
     rid_operator_id_t operator_id;
+    rid_location_t location;
 
     rid_message_pack_init(&message_pack);
 
