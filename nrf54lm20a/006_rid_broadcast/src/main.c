@@ -36,18 +36,40 @@ static struct bt_data ad[] = {
 
 static struct bt_le_ext_adv *adv;
 
-static int update_location(rid_location_t *location, const struct gnss_data *data) {
+static int update_location(const struct gnss_data *data) {
     int rc;
+    uint8_t index;
+    rid_location_t location;
+
+    /* Find the index of the location message. We assume it exists. */
+    rc = rid_message_pack_find_message_index_by_type(
+        &message_pack, RID_MESSAGE_TYPE_LOCATION, 0, &index
+    );
+    if (rc < 0) {
+        return rc;
+    }
+
+    /* Make a copy we can work on. */
+    rc = rid_message_pack_copy_message_at(&message_pack, index, &location);
+    if (rc < 0) {
+        return rc;
+    }
 
     /* If we have no fix set location invalid. */
     if (data->info.fix_status == GNSS_FIX_STATUS_NO_FIX) {
-        return rid_location_set_coordinates(
-            location, RID_LATITUDE_INVALID, RID_LONGITUDE_INVALID
+        rc = rid_location_set_coordinates(
+            &location, RID_LATITUDE_INVALID, RID_LONGITUDE_INVALID
         );
+        if (rc < 0) {
+            return rc;
+        }
+
+        /* Replace the location message in the pack. */
+        return rid_message_pack_set_message_at(&message_pack, index, &location);
     }
 
     rc = rid_location_set_coordinates(
-        location,
+        &location,
         (double)data->nav_data.latitude / 1000000000.0,
         (double)data->nav_data.longitude / 1000000000.0
     );
@@ -56,24 +78,25 @@ static int update_location(rid_location_t *location, const struct gnss_data *dat
     }
 
     rc = rid_location_set_geodetic_altitude(
-        location, (float)(data->nav_data.altitude + data->info.geoid_separation) / 1000.0f
+        &location,
+        (float)(data->nav_data.altitude + data->info.geoid_separation) / 1000.0f
     );
     if (rc < 0) {
         return rc;
     }
 
-    rc = rid_location_set_speed(location, (float)data->nav_data.speed / 1000.0f);
+    rc = rid_location_set_speed(&location, (float)data->nav_data.speed / 1000.0f);
     if (rc < 0) {
         return rc;
     }
 
     if (data->nav_data.speed == 0) {
-        rc = rid_location_set_track_direction(location, RID_TRACK_DIRECTION_UNKNOWN);
+        rc = rid_location_set_track_direction(&location, RID_TRACK_DIRECTION_UNKNOWN);
     } else {
         uint16_t degrees;
 
         degrees = (uint16_t)((data->nav_data.bearing / 1000U) % 360U);
-        rc = rid_location_set_track_direction(location, degrees);
+        rc = rid_location_set_track_direction(&location, degrees);
     }
     if (rc < 0) {
         return rc;
@@ -86,14 +109,15 @@ static int update_location(rid_location_t *location, const struct gnss_data *dat
         deciseconds = (uint32_t)data->utc.minute * 600U;
         deciseconds += (uint32_t)data->utc.millisecond / 100U;
         if (deciseconds <= RID_TIMESTAMP_MAX) {
-            rc = rid_location_set_timestamp(location, (uint16_t)deciseconds);
+            rc = rid_location_set_timestamp(&location, (uint16_t)deciseconds);
             if (rc < 0) {
                 return rc;
             }
         }
     }
 
-    return RID_SUCCESS;
+    /* Replace the location message in the pack. */
+    return rid_message_pack_set_message_at(&message_pack, index, &location);
 }
 
 static int update_advertising(void) {
@@ -122,30 +146,18 @@ static int update_advertising(void) {
 
 static void gnss_data_cb(const struct device *dev, const struct gnss_data *data) {
     int rc;
-    uint8_t index;
     static char json[1024];
-    rid_location_t location;
 
     ARG_UNUSED(dev);
 
-    /* Find the index of the location message. We assume it exists. */
-    rid_message_pack_find_message_index_by_type(
-        &message_pack, RID_MESSAGE_TYPE_LOCATION, 0, &index
-    );
-
-    /* Make a copy we can work on. */
-    rid_message_pack_copy_message_at(&message_pack, index, &location);
-
-    /* Update the copy with data from GNSS. */
-    rc = update_location(&location, data);
+    /* Update the location message in the message pack. */
+    rc = update_location(data);
     if (rc < 0) {
         LOG_ERR("Location update failed: %s", rid_error_to_string(rc));
         return;
     }
 
-    /* Replace the location message in the pack. */
-    rid_message_pack_set_message_at(&message_pack, index, &location);
-
+    /* Tell bluetooth to use the updated message pack. */
     rc = update_advertising();
     if (rc < 0) {
         return;
