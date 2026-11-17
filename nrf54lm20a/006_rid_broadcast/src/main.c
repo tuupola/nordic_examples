@@ -18,15 +18,20 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 static rid_message_pack_t message_pack;
 
-static uint8_t svc_data[] = {
+/* Everything before message is the header. */
+#define SVC_DATA_HEADER_SIZE RID_TRANSPORT_BT_MESSAGE_OFFSET
+
+/* Reserve space for the header and max size message pack. */
+static uint8_t svc_data[SVC_DATA_HEADER_SIZE + RID_MESSAGE_PACK_MAX_SIZE] = {
     RID_TRANSPORT_BT_SERVICE_UUID_LO,
     RID_TRANSPORT_BT_SERVICE_UUID_HI,
     RID_TRANSPORT_BT_APP_CODE,
     0x00,
 };
 
-static const struct bt_data ad[] = {
-    BT_DATA(BT_DATA_SVC_DATA16, svc_data, 4),
+/* Put header only svc data to the ad array. */
+static struct bt_data ad[] = {
+    BT_DATA(BT_DATA_SVC_DATA16, svc_data, SVC_DATA_HEADER_SIZE),
 };
 
 static struct bt_le_ext_adv *adv;
@@ -91,6 +96,30 @@ static int update_location(rid_location_t *location, const struct gnss_data *dat
     return RID_SUCCESS;
 }
 
+static int update_advertising(void) {
+    int rc;
+    size_t pack_size;
+
+    if (adv == NULL) {
+        return 0;
+    }
+
+    /* Copy message pack data into service data. */
+    pack_size = rid_message_pack_size(&message_pack);
+    memcpy(&svc_data[RID_TRANSPORT_BT_MESSAGE_OFFSET], &message_pack, pack_size);
+    ad[0].data_len = SVC_DATA_HEADER_SIZE + pack_size;
+    svc_data[RID_TRANSPORT_BT_COUNTER_OFFSET]++;
+
+    /* Tell bluetooth to start using the new data. */
+    rc = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+    if (rc < 0) {
+        LOG_ERR("bt_le_ext_adv_set_data() failed: %d", rc);
+        return rc;
+    }
+
+    return 0;
+}
+
 static void gnss_data_cb(const struct device *dev, const struct gnss_data *data) {
     int rc;
     uint8_t index;
@@ -117,13 +146,18 @@ static void gnss_data_cb(const struct device *dev, const struct gnss_data *data)
     /* Replace the location message in the pack. */
     rid_message_pack_set_message_at(&message_pack, index, &location);
 
+    rc = update_advertising();
+    if (rc < 0) {
+        return;
+    }
+
     LOG_HEXDUMP_DBG(&message_pack, rid_message_pack_size(&message_pack), "message_pack");
 
     rid_message_pack_to_json(&message_pack, json, sizeof(json), NULL);
     LOG_INF("%s", json);
 }
 
-//GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
+GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 
 static int start_advertising(void) {
     int rc;
@@ -140,9 +174,8 @@ static int start_advertising(void) {
         return rc;
     }
 
-    rc = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+    rc = update_advertising();
     if (rc < 0) {
-        LOG_ERR("bt_le_ext_adv_set_data() failed: %d", rc);
         return rc;
     }
 
