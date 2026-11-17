@@ -10,6 +10,7 @@
 #include <rid/location.h>
 #include <rid/message_pack.h>
 #include <rid/operator_id.h>
+#include <rid/transport.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
@@ -17,7 +18,12 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 static rid_message_pack_t message_pack;
 
-static uint8_t svc_data[] = {0xfa, 0xff, 0x0d, 0x00};
+static uint8_t svc_data[] = {
+    RID_TRANSPORT_BT_SERVICE_UUID_LO,
+    RID_TRANSPORT_BT_SERVICE_UUID_HI,
+    RID_TRANSPORT_BT_APP_CODE,
+    0x00,
+};
 
 static const struct bt_data ad[] = {
     BT_DATA(BT_DATA_SVC_DATA16, svc_data, 4),
@@ -117,7 +123,7 @@ static void gnss_data_cb(const struct device *dev, const struct gnss_data *data)
     LOG_INF("%s", json);
 }
 
-GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
+//GNSS_DATA_CALLBACK_DEFINE(GNSS_DEV, gnss_data_cb);
 
 static int start_advertising(void) {
     int rc;
